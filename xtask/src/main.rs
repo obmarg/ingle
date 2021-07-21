@@ -55,20 +55,22 @@ fn main() {
     }
 
     match flags.subcommand {
-        flags::AppCmd::TonicBuild(_) => tonic_build::configure()
-            .build_server(false)
-            .out_dir("ingle/src/google")
-            .compile(
-                &[
-                    "proto/googleapis/google/firestore/v1/common.proto",
-                    "proto/googleapis/google/firestore/v1/document.proto",
-                    "proto/googleapis/google/firestore/v1/firestore.proto",
-                    "proto/googleapis/google/firestore/v1/query.proto",
-                    "proto/googleapis/google/firestore/v1/write.proto",
-                ],
-                &["proto/googleapis"],
-            )
-            .unwrap(),
+        flags::AppCmd::TonicBuild(_) => {
+            tonic_build::configure()
+                .build_server(false)
+                .out_dir("ingle/src/google")
+                .compile(
+                    &[
+                        "proto/googleapis/google/firestore/v1/common.proto",
+                        "proto/googleapis/google/firestore/v1/document.proto",
+                        "proto/googleapis/google/firestore/v1/firestore.proto",
+                        "proto/googleapis/google/firestore/v1/query.proto",
+                        "proto/googleapis/google/firestore/v1/write.proto",
+                    ],
+                    &["proto/googleapis"],
+                )
+                .unwrap();
+        }
     }
 
     println!("Done!");
