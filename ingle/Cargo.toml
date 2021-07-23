@@ -7,7 +7,16 @@ edition = "2018"
 
 [dependencies]
 async-trait = "0.1.50"
-tonic = { version = "0.5.0", no-default-features = true, features = ["transport"] }
+frank_jwt = "3.1.2"
+prost = "0.8"
+prost-types = "0.8"
+serde = "1"
+serde_json = "1.0.64"
+thiserror = "1.0.26"
+
+[dependencies.tonic]
+version = "0.5.0"
+features = ["transport", "tls", "tls-roots"]
 
 [dev-dependencies]
 insta = "1.7.1"
