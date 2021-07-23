@@ -1,6 +1,6 @@
 use crate::values::DocumentValues;
 
-use super::requests;
+use crate::{operations, requests};
 
 enum Error {}
 
@@ -10,7 +10,7 @@ trait ReadExecutor {}
 pub trait WriteExecutor {
     async fn add_document(
         &self,
-        input: requests::AddDocumentRequest,
+        input: operations::AddDocumentRequest,
     ) -> Result<requests::DocumentResponse<DocumentValues>, ()>;
 }
 

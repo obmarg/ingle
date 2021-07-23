@@ -1,6 +1,6 @@
 mod add_document;
 
-pub use add_document::AddDocumentOperation;
+pub use add_document::{AddDocumentOperation, AddDocumentRequest};
 
 pub(crate) trait IntoRequest {
     type Request;

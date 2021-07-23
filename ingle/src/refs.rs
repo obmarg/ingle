@@ -1,16 +1,11 @@
-use std::marker::PhantomData;
-
 use crate::{
     document::Document,
-    executors::WriteExecutor,
     operations::AddDocumentOperation,
     path::{CollectionPath, DocumentPath},
-    requests::{AddDocumentRequest, DocumentResponse},
-    values::DocumentValues,
 };
 
 pub struct CollectionRef {
-    path: CollectionPath,
+    pub(crate) path: CollectionPath,
 }
 
 impl CollectionRef {
@@ -24,13 +19,6 @@ impl CollectionRef {
         DocumentRef {
             path: self.path.document(id.into()),
         }
-    }
-
-    pub fn add_document<T>(&self, document: &T) -> AddDocumentOperation<T>
-    where
-        T: Document,
-    {
-        AddDocumentOperation::new(self.path.clone(), document)
     }
 }
 

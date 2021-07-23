@@ -2,12 +2,18 @@ use std::marker::PhantomData;
 
 use super::IntoRequest;
 use crate::{
-    document::Document,
-    executors::WriteExecutor,
-    path::CollectionPath,
-    requests::{AddDocumentRequest, DocumentResponse},
+    document::Document, executors::WriteExecutor, path::CollectionPath, requests::DocumentResponse,
     values::DocumentValues,
 };
+
+impl crate::CollectionRef {
+    pub fn add_document<T>(&self, document: &T) -> AddDocumentOperation<T>
+    where
+        T: Document,
+    {
+        AddDocumentOperation::new(self.path.clone(), document)
+    }
+}
 
 #[derive(Debug)]
 pub struct AddDocumentOperation<T> {
@@ -24,7 +30,7 @@ impl<T> AddDocumentOperation<T>
 where
     T: Document,
 {
-    pub(crate) fn new(collection_path: CollectionPath, document: &T) -> Self {
+    fn new(collection_path: CollectionPath, document: &T) -> Self {
         Self {
             collection_path,
             document: document.to_values(),
@@ -57,10 +63,16 @@ impl<T> IntoRequest for AddDocumentOperation<T> {
     type Request = AddDocumentRequest;
 
     fn into_request(self) -> Result<Self::Request, ()> {
-        Ok(AddDocumentRequest::new(
-            self.collection_path,
-            self.document_id.unwrap_or_default(),
-            self.document?,
-        ))
+        Ok(AddDocumentRequest {
+            collection_path: self.collection_path,
+            document_id: self.document_id.unwrap_or_default(),
+            document: self.document?,
+        })
     }
+}
+
+pub struct AddDocumentRequest {
+    collection_path: CollectionPath,
+    document_id: String,
+    document: DocumentValues,
 }
