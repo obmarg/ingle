@@ -1,10 +1,18 @@
+use crate::values::DocumentValues;
+
+use super::requests;
+
 enum Error {}
 
-// TODO: Wonder if I actually need read vs write executors.
-// That's a Q for later
 trait ReadExecutor {}
 
-trait WriteExecutor {}
+#[async_trait::async_trait]
+pub trait WriteExecutor {
+    async fn add_document(
+        &self,
+        input: requests::AddDocumentRequest,
+    ) -> Result<requests::DocumentResponse<DocumentValues>, ()>;
+}
 
 #[cfg(test)]
 mod tests {
