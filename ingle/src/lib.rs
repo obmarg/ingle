@@ -4,8 +4,12 @@ mod executors;
 mod google;
 mod paths;
 mod refs;
-mod values;
 
 pub mod operations;
+pub mod values;
 
-pub use refs::{CollectionRef, DocumentRef};
+pub use self::{
+    database::{Database, DatabaseBuilder},
+    document::Document,
+    refs::{CollectionRef, DocumentRef},
+};
