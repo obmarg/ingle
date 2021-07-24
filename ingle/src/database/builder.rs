@@ -6,7 +6,10 @@ use tonic::{
     Request,
 };
 
-use super::{auth::Token, Database, Interceptor};
+use super::{
+    auth::{AuthService, Credentials, Token},
+    Database,
+};
 use crate::google::firestore::v1::firestore_client::FirestoreClient;
 use crate::paths::ProjectPath;
 
@@ -17,7 +20,7 @@ static DEFAULT_DATABASE: &str = "(default)";
 
 pub struct DatabaseBuilder {
     endpoint: Endpoint,
-    credentials: Credentials,
+    credentials: Option<Credentials>,
     project_id: String,
     database_id: String,
 }
@@ -26,7 +29,7 @@ impl DatabaseBuilder {
     pub fn new(project_id: impl Into<String>) -> DatabaseBuilder {
         DatabaseBuilder {
             endpoint: Endpoint::from_static(FIRESTORE_ENDPOINT),
-            credentials: Credentials::Default,
+            credentials: None,
             project_id: project_id.into(),
             database_id: DEFAULT_DATABASE.to_string(),
         }
@@ -70,56 +73,61 @@ impl DatabaseBuilder {
         }
     }
 
-    pub fn default_credentials(self) -> Self {
-        DatabaseBuilder {
-            credentials: Credentials::Default,
-            ..self
-        }
-    }
+    pub fn default_credentials(self) -> Result<Self, DefaultCredentialsError> {
+        let filename = match std::env::var("GOOGLE_APPLICATION_CREDENTIALS") {
+            Ok(filename) => filename,
+            Err(std::env::VarError::NotPresent) => {
+                return Err(DefaultCredentialsError::MissingEnvVar)
+            }
+            Err(std::env::VarError::NotUnicode(_)) => {
+                return Err(DefaultCredentialsError::MalformedEnvVar)
+            }
+        };
 
-    pub fn emulator_credentials(self) -> Self {
-        DatabaseBuilder {
-            credentials: Credentials::Emulator,
+        Ok(DatabaseBuilder {
+            credentials: Some(Credentials::Default(Token::from_file(
+                filename,
+                FIRESTORE_TOKEN_AUDIENCE,
+            )?)),
             ..self
-        }
+        })
     }
 
     pub fn emulator_owner_credentials(self) -> Self {
         DatabaseBuilder {
-            credentials: Credentials::EmulatorOwner,
+            credentials: Some(Credentials::EmulatorOwner),
             ..self
         }
     }
 
     #[allow(clippy::redundant_closure)]
     pub async fn connect(self) -> Result<Database, ConnectError> {
+        // TODO: Probably want retries at some point?
         let channel = self.endpoint.connect().await?;
-        let interceptor: Interceptor = match self.credentials {
-            Credentials::Default => {
-                let token = Token::from_default_credentials(FIRESTORE_TOKEN_AUDIENCE)?;
-                Box::new(move |mut req: Request<()>| {
-                    req.metadata_mut().insert(
-                        "authorization",
-                        MetadataValue::from_str(&format!("Bearer {}", token.jwt())).unwrap(),
-                    );
-                    Ok(req)
-                })
-            }
-            Credentials::Emulator => Box::new(move |req: Request<()>| Ok(req)),
-            Credentials::EmulatorOwner => Box::new(move |mut req: Request<()>| {
-                req.metadata_mut().insert(
-                    "authorization",
-                    MetadataValue::from_str("Bearer owner").unwrap(),
-                );
-                Ok(req)
-            }),
-        };
+        let credentials = self.credentials;
 
-        let client = FirestoreClient::with_interceptor(channel, interceptor);
+        let service = AuthService::new(channel, credentials);
+
         Ok(Database {
-            client,
+            client: FirestoreClient::new(service),
             project_path: ProjectPath::new(self.project_id, self.database_id),
         })
+    }
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum DefaultCredentialsError {
+    #[error("The GOOGLE_APPLICATION_CREDENTIALS environment variable could not be loaded")]
+    MissingEnvVar,
+    #[error("The GOOGLE_APPLICATION_CREDENTIALS environment variable was not valid unicode")]
+    MalformedEnvVar,
+    #[error("Error encoding a JWT from credentials: {0}")]
+    JwtError(String),
+}
+
+impl From<frank_jwt::Error> for DefaultCredentialsError {
+    fn from(e: frank_jwt::Error) -> Self {
+        DefaultCredentialsError::JwtError(e.to_string())
     }
 }
 
@@ -129,16 +137,4 @@ pub enum ConnectError {
     JwtError(String),
     #[error("gRPC transport error: {0}")]
     TransportError(#[from] transport::Error),
-}
-
-impl From<frank_jwt::Error> for ConnectError {
-    fn from(e: frank_jwt::Error) -> Self {
-        ConnectError::JwtError(e.to_string())
-    }
-}
-
-enum Credentials {
-    Default,
-    Emulator,
-    EmulatorOwner,
 }

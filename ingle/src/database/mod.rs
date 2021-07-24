@@ -14,13 +14,12 @@ mod builder;
 
 pub use builder::{ConnectError, DatabaseBuilder};
 
+use self::auth::AuthService;
+
 pub struct Database {
-    client: FirestoreClient<InterceptedService<Channel, Interceptor>>,
+    client: FirestoreClient<AuthService<Channel>>,
     project_path: ProjectPath,
 }
-
-type Interceptor =
-    Box<dyn FnMut(tonic::Request<()>) -> Result<tonic::Request<()>, tonic::Status> + Send + Sync>;
 
 #[async_trait::async_trait]
 impl WriteExecutor for Database {
