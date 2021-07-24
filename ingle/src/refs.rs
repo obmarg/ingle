@@ -1,8 +1,4 @@
-use crate::{
-    document::Document,
-    operations::AddDocumentOperation,
-    path::{CollectionPath, DocumentPath},
-};
+use crate::paths::{CollectionPath, DocumentPath};
 
 pub struct CollectionRef {
     pub(crate) path: CollectionPath,

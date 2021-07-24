@@ -1,10 +1,9 @@
-mod connection;
+mod database;
 mod document;
 mod executors;
 mod google;
-mod path;
+mod paths;
 mod refs;
-mod requests;
 mod values;
 
 pub mod operations;

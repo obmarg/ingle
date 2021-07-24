@@ -2,7 +2,11 @@ use std::marker::PhantomData;
 
 use super::IntoRequest;
 use crate::{
-    document::Document, executors::WriteExecutor, path::CollectionPath, requests::DocumentResponse,
+    document::{Document, DocumentResponse},
+    executors::WriteExecutor,
+    google::firestore::v1 as firestore,
+    paths::CollectionPath,
+    paths::ProjectPath,
     values::DocumentValues,
 };
 
@@ -75,4 +79,26 @@ pub struct AddDocumentRequest {
     collection_path: CollectionPath,
     document_id: String,
     document: DocumentValues,
+}
+
+impl AddDocumentRequest {
+    pub fn into_firestore_request(
+        self,
+        project_path: ProjectPath,
+    ) -> firestore::CreateDocumentRequest {
+        let (parent, collection_id) = self.collection_path.parent_and_collection_id(project_path);
+
+        firestore::CreateDocumentRequest {
+            parent,
+            collection_id,
+            document_id: self.document_id,
+            document: Some(firestore::Document {
+                name: String::new(),
+                fields: self.document.into_firestore(),
+                create_time: None,
+                update_time: None,
+            }),
+            mask: None,
+        }
+    }
 }

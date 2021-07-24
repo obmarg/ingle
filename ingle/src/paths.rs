@@ -29,6 +29,15 @@ impl CollectionPath {
 
         DocumentPath { path }
     }
+
+    pub fn parent_and_collection_id(self, project_path: ProjectPath) -> (String, String) {
+        let current_parent = self.parent.unwrap_or_default();
+        let mut parent = String::with_capacity(current_parent.len() + project_path.path.len());
+        parent.push_str(&project_path.path);
+        parent.push_str(&current_parent);
+
+        (parent, self.id)
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -41,6 +50,22 @@ impl DocumentPath {
         CollectionPath {
             parent: Some(self.path.clone()),
             id,
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct ProjectPath {
+    path: String,
+}
+
+impl ProjectPath {
+    pub fn new(project_id: String, database_id: String) -> ProjectPath {
+        ProjectPath {
+            path: format!(
+                "projects/{}/databases/{}/documents/",
+                project_id, database_id
+            ),
         }
     }
 }
