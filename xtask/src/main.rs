@@ -56,10 +56,14 @@ fn main() {
 
     match flags.subcommand {
         flags::AppCmd::TonicBuild(_) => {
+            let mut prost_config = prost_build::Config::new();
+            prost_config.disable_comments(["HttpRule"]);
+
             tonic_build::configure()
                 .build_server(false)
                 .out_dir("ingle/src/google")
-                .compile(
+                .compile_with_config(
+                    prost_config,
                     &[
                         "proto/googleapis/google/firestore/v1/common.proto",
                         "proto/googleapis/google/firestore/v1/document.proto",
