@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 use std::task::{Context, Poll};
-use tonic::codegen::http::{HeaderValue, Request};
+use tonic::codegen::http::{header::AUTHORIZATION, HeaderValue, Request};
 use tonic::metadata::MetadataValue;
 use tower_service::Service;
 
@@ -37,15 +37,22 @@ where
     #[inline]
     fn call(&mut self, mut request: Request<Body>) -> Self::Future {
         match &self.credentials {
-            Some(Credentials::Default(token)) => {
+            Some(Credentials::ServiceAccount(token)) => {
+                let jwt = token.jwt();
                 request.headers_mut().insert(
-                    "authorization",
-                    HeaderValue::from_str(&format!("Bearer {}", token.jwt())).unwrap(),
+                    AUTHORIZATION,
+                    HeaderValue::from_str(&format!("Bearer {}", jwt)).unwrap(),
+                );
+            }
+            Some(Credentials::AuthToken(token)) => {
+                request.headers_mut().insert(
+                    AUTHORIZATION,
+                    HeaderValue::from_str(&format!("Bearer {}", token)).unwrap(),
                 );
             }
             Some(Credentials::EmulatorOwner) => {
                 request.headers_mut().insert(
-                    "authorization",
+                    AUTHORIZATION,
                     HeaderValue::from_str("Bearer owner").unwrap(),
                 );
             }

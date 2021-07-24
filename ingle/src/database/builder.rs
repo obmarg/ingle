@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use tonic::{
     metadata::MetadataValue,
-    transport::{self, Endpoint},
+    transport::{self, ClientTlsConfig, Endpoint},
     Request,
 };
 
@@ -28,7 +28,9 @@ pub struct DatabaseBuilder {
 impl DatabaseBuilder {
     pub fn new(project_id: impl Into<String>) -> DatabaseBuilder {
         DatabaseBuilder {
-            endpoint: Endpoint::from_static(FIRESTORE_ENDPOINT),
+            endpoint: Endpoint::from_static(FIRESTORE_ENDPOINT)
+                .tls_config(ClientTlsConfig::default())
+                .expect("Couldn't configure TLS"),
             credentials: None,
             project_id: project_id.into(),
             database_id: DEFAULT_DATABASE.to_string(),
@@ -38,7 +40,9 @@ impl DatabaseBuilder {
     pub fn https_endpoint(self, url: &str) -> Self {
         DatabaseBuilder {
             endpoint: Endpoint::from_shared(format!("https://{}", url))
-                .expect("Invalid firestore URL"),
+                .expect("Invalid firestore URL")
+                .tls_config(ClientTlsConfig::default())
+                .expect("Couldn't initialise TLS"),
             ..self
         }
     }
@@ -85,7 +89,7 @@ impl DatabaseBuilder {
         };
 
         Ok(DatabaseBuilder {
-            credentials: Some(Credentials::Default(Token::from_file(
+            credentials: Some(Credentials::ServiceAccount(Token::from_file(
                 filename,
                 FIRESTORE_TOKEN_AUDIENCE,
             )?)),
@@ -96,6 +100,13 @@ impl DatabaseBuilder {
     pub fn emulator_owner_credentials(self) -> Self {
         DatabaseBuilder {
             credentials: Some(Credentials::EmulatorOwner),
+            ..self
+        }
+    }
+
+    pub fn auth_token(self, token: impl Into<String>) -> Self {
+        DatabaseBuilder {
+            credentials: Some(Credentials::AuthToken(token.into())),
             ..self
         }
     }

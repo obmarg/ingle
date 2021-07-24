@@ -6,8 +6,7 @@ use ingle::{
 #[tokio::test]
 async fn test_adding_document() {
     let database = DatabaseBuilder::new("nandos-api-platform")
-        .default_credentials()
-        .unwrap()
+        .auth_token(std::env::var("GOOGLE_TOKEN").unwrap())
         .connect()
         .await
         .unwrap();

@@ -51,14 +51,6 @@ impl Token {
     ) -> Result<Self, frank_jwt::Error> {
         Token::new(audience, credentials_from_file(path)?)
     }
-
-    pub fn from_default_credentials(audience: impl ToString) -> Result<Self, frank_jwt::Error> {
-        Token::from_file(
-            std::env::var("GOOGLE_APPLICATION_CREDENTIALS")
-                .expect("GOOGLE_APPLICATION_CREDENTIALS not defined"),
-            audience,
-        )
-    }
 }
 
 static JWT_VALID_TIME: Duration = Duration::from_secs(10 * 60);
@@ -92,11 +84,11 @@ impl TokenInner {
             .as_secs();
 
         let claims = json!({
-            "sub": email.clone(),
-            "iss": email.clone(),
-            "aud": audience.to_owned(),
+            "sub": &email,
+            "iss": &email,
+            "aud": &audience,
             "iat": now_timestamp,
-            "exp": expires_at_timestamp,
+            "exp": expires_at_timestamp
         });
 
         let header = json!({});
