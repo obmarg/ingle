@@ -23,7 +23,7 @@ impl DocumentValues {
 
     pub(crate) fn try_from_firestore(
         fields: HashMap<String, firestore::Value>,
-    ) -> Result<Self, ()> {
+    ) -> Result<Self, DecodingError> {
         Ok(DocumentValues(
             fields
                 .into_iter()
@@ -90,10 +90,10 @@ impl Value {
         }
     }
 
-    pub fn try_from_firestore(value: firestore::Value) -> Result<Self, ()> {
+    pub fn try_from_firestore(value: firestore::Value) -> Result<Self, DecodingError> {
         use firestore::value::ValueType;
 
-        let value_type = value.value_type.ok_or_else(|| panic!("TODO: Errors"))?;
+        let value_type = value.value_type.ok_or(DecodingError::NoValuePresent)?;
 
         Ok(match value_type {
             ValueType::NullValue(_) => Value::Null,
@@ -120,3 +120,12 @@ impl Value {
         })
     }
 }
+
+#[derive(thiserror::Error, Debug)]
+pub enum DecodingError {
+    #[error("No value was present in the response")]
+    NoValuePresent,
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum EncodingError {}

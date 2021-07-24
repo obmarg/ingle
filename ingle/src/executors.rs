@@ -1,8 +1,4 @@
-use crate::values::DocumentValues;
-
-use crate::{document::DocumentResponse, operations};
-
-enum Error {}
+use crate::{document::DocumentResponse, operations, values::DocumentValues, FirestoreError};
 
 trait ReadExecutor {}
 
@@ -11,7 +7,7 @@ pub trait WriteExecutor: Send + Sync {
     async fn add_document(
         &self,
         input: operations::AddDocumentRequest,
-    ) -> Result<DocumentResponse<DocumentValues>, ()>;
+    ) -> Result<DocumentResponse<DocumentValues>, FirestoreError>;
 }
 
 #[async_trait::async_trait]
@@ -22,7 +18,7 @@ where
     async fn add_document(
         &self,
         input: operations::AddDocumentRequest,
-    ) -> Result<DocumentResponse<DocumentValues>, ()> {
+    ) -> Result<DocumentResponse<DocumentValues>, FirestoreError> {
         (*self).add_document(input).await
     }
 }

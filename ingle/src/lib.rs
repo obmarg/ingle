@@ -9,7 +9,7 @@ pub mod operations;
 pub mod values;
 
 pub use self::{
-    database::{Database, DatabaseBuilder},
+    database::{Database, DatabaseBuilder, FirestoreError},
     document::Document,
     refs::{CollectionRef, DocumentRef},
 };

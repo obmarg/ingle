@@ -1,17 +1,20 @@
-use crate::{google::firestore::v1 as firestore, values::DocumentValues};
+use crate::{
+    google::firestore::v1 as firestore,
+    values::{DecodingError, DocumentValues, EncodingError},
+};
 
 pub trait Document: Sized {
-    fn to_values(&self) -> Result<DocumentValues, ()>;
+    fn to_values(&self) -> Result<DocumentValues, EncodingError>;
 
-    fn from_values(values: DocumentValues) -> Result<Self, ()>;
+    fn from_values(values: DocumentValues) -> Result<Self, DecodingError>;
 }
 
 impl Document for DocumentValues {
-    fn to_values(&self) -> Result<DocumentValues, ()> {
+    fn to_values(&self) -> Result<DocumentValues, EncodingError> {
         Ok(self.clone())
     }
 
-    fn from_values(values: DocumentValues) -> Result<Self, ()> {
+    fn from_values(values: DocumentValues) -> Result<Self, DecodingError> {
         Ok(values)
     }
 }
@@ -23,7 +26,7 @@ pub struct DocumentResponse<D> {
 impl DocumentResponse<DocumentValues> {
     pub(crate) fn try_from_firestore(
         doc: firestore::Document,
-    ) -> Result<DocumentResponse<DocumentValues>, ()> {
+    ) -> Result<DocumentResponse<DocumentValues>, DecodingError> {
         Ok(DocumentResponse {
             name: doc.name,
             document: DocumentValues::try_from_firestore(doc.fields)?,
@@ -32,7 +35,9 @@ impl DocumentResponse<DocumentValues> {
 }
 
 impl firestore::Document {
-    pub(crate) fn try_into_document_response(self) -> Result<DocumentResponse<DocumentValues>, ()> {
+    pub(crate) fn try_into_document_response(
+        self,
+    ) -> Result<DocumentResponse<DocumentValues>, DecodingError> {
         DocumentResponse::try_from_firestore(self)
     }
 }

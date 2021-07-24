@@ -1,13 +1,13 @@
 use std::marker::PhantomData;
 
-use super::IntoRequest;
+use super::{IntoRequest, OperationError};
 use crate::{
     document::{Document, DocumentResponse},
     executors::WriteExecutor,
     google::firestore::v1 as firestore,
     paths::CollectionPath,
     paths::ProjectPath,
-    values::DocumentValues,
+    values::{DocumentValues, EncodingError},
 };
 
 impl crate::CollectionRef {
@@ -25,7 +25,7 @@ pub struct AddDocumentOperation<T> {
 
     document_id: Option<String>,
 
-    document: Result<DocumentValues, ()>,
+    document: Result<DocumentValues, EncodingError>,
 
     t: PhantomData<T>,
 }
@@ -50,7 +50,7 @@ where
         }
     }
 
-    pub async fn run<E>(self, executor: E) -> Result<DocumentResponse<T>, ()>
+    pub async fn run<E>(self, executor: E) -> Result<DocumentResponse<T>, OperationError>
     where
         E: WriteExecutor,
     {
@@ -66,7 +66,7 @@ where
 impl<T> IntoRequest for AddDocumentOperation<T> {
     type Request = AddDocumentRequest;
 
-    fn into_request(self) -> Result<Self::Request, ()> {
+    fn into_request(self) -> Result<Self::Request, OperationError> {
         Ok(AddDocumentRequest {
             collection_path: self.collection_path,
             document_id: self.document_id.unwrap_or_default(),
