@@ -21,8 +21,8 @@ impl CollectionPath {
 
         if let Some(parent) = &self.parent {
             path.push_str(&parent);
-            path.push('/');
         }
+        path.push('/');
         path.push_str(&self.id);
         path.push('/');
         path.push_str(&id);
@@ -31,10 +31,12 @@ impl CollectionPath {
     }
 
     pub fn parent_and_collection_id(self, project_path: ProjectPath) -> (String, String) {
-        let current_parent = self.parent.unwrap_or_default();
-        let mut parent = String::with_capacity(current_parent.len() + project_path.path.len());
+        let parent_len = self.parent.as_ref().map(String::len).unwrap_or_default();
+        let mut parent = String::with_capacity(parent_len + project_path.path.len());
         parent.push_str(&project_path.path);
-        parent.push_str(&current_parent);
+        if let Some(current_parent) = self.parent {
+            parent.push_str(&current_parent);
+        }
 
         (parent, self.id)
     }
@@ -63,7 +65,7 @@ impl ProjectPath {
     pub fn new(project_id: String, database_id: String) -> ProjectPath {
         ProjectPath {
             path: format!(
-                "projects/{}/databases/{}/documents/",
+                "projects/{}/databases/{}/documents",
                 project_id, database_id
             ),
         }
@@ -83,7 +85,7 @@ mod tests {
                 .document("Lyra Belacqua".into())
                 .collection("talents".into())
                 .document("reading the alethiometer".into()).path,
-            @"books/Northern Lights/characters/Lyra Belacqua/talents/reading the alethiometer"
+            @"/books/Northern Lights/characters/Lyra Belacqua/talents/reading the alethiometer"
         )
     }
 
@@ -98,7 +100,7 @@ mod tests {
             @r###"
         CollectionPath {
             parent: Some(
-                "books/Northern Lights/characters/Lyra Belacqua",
+                "/books/Northern Lights/characters/Lyra Belacqua",
             ),
             id: "talents",
         }

@@ -80,7 +80,7 @@ mod tests {
         AddDocumentOperation {
             collection_path: CollectionPath {
                 parent: Some(
-                    "books/Northern Lights",
+                    "/books/Northern Lights",
                 ),
                 id: "characters",
             },
