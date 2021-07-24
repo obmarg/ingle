@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{google::firestore::v1 as firestore, paths::DocumentPath};
+use crate::google::firestore::v1 as firestore;
 
 #[derive(Clone, Debug)]
 pub struct DocumentValues(HashMap<String, Value>);

@@ -1,11 +1,8 @@
-use tonic::{codegen::InterceptedService, transport::Channel};
+use tonic::transport::Channel;
 
 use crate::{
-    document::DocumentResponse,
-    executors::WriteExecutor,
-    google::firestore::v1::firestore_client::FirestoreClient,
-    operations::{self, IntoRequest},
-    paths::ProjectPath,
+    document::DocumentResponse, executors::WriteExecutor,
+    google::firestore::v1::firestore_client::FirestoreClient, operations, paths::ProjectPath,
     values::DocumentValues,
 };
 

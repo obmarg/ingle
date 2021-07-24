@@ -1,6 +1,5 @@
 use std::{
-    fs,
-    io::{self, Write},
+    fs, io,
     path::Path,
     sync::{Arc, Mutex},
     time::{Duration, Instant, SystemTime},

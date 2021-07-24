@@ -1,10 +1,6 @@
 use std::time::Duration;
 
-use tonic::{
-    metadata::MetadataValue,
-    transport::{self, ClientTlsConfig, Endpoint},
-    Request,
-};
+use tonic::transport::{self, ClientTlsConfig, Endpoint};
 
 use super::{
     auth::{AuthService, Credentials, Token},

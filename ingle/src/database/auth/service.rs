@@ -1,9 +1,7 @@
 //! Authentication service.
 
-use std::sync::Arc;
 use std::task::{Context, Poll};
 use tonic::codegen::http::{header::AUTHORIZATION, HeaderValue, Request};
-use tonic::metadata::MetadataValue;
 use tower_service::Service;
 
 use super::Credentials;
