@@ -20,7 +20,32 @@ impl Document for DocumentValues {
 }
 
 pub struct DocumentResponse<D> {
+    pub name: String,
+
     pub document: D,
+}
+
+impl<D> PartialEq for DocumentResponse<D>
+where
+    D: PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.name.eq(&other.name) && self.document.eq(&other.document)
+    }
+}
+
+impl<D> Eq for DocumentResponse<D> where D: Eq {}
+
+impl<D> std::fmt::Debug for DocumentResponse<D>
+where
+    D: std::fmt::Debug,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("DocumentResponse")
+            .field("name", &self.name)
+            .field("document", &self.document)
+            .finish()
+    }
 }
 
 impl DocumentResponse<DocumentValues> {

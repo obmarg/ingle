@@ -1,8 +1,9 @@
+use async_trait::async_trait;
 use tonic::transport::Channel;
 
 use crate::{
     document::DocumentResponse,
-    executors::WriteExecutor,
+    executors::{ReadExecutor, WriteExecutor},
     google::firestore::v1::firestore_client::FirestoreClient,
     operations,
     paths::ProjectPath,
@@ -21,7 +22,37 @@ pub struct Database {
     project_path: ProjectPath,
 }
 
-#[async_trait::async_trait]
+#[async_trait]
+impl ReadExecutor for Database {
+    async fn list_documents(
+        &self,
+        input: operations::ListDocumentsRequest,
+    ) -> Result<operations::ListDocumentsResponse<DocumentValues>, FirestoreError> {
+        let mut client = self.client.clone();
+
+        let response = client
+            .list_documents(input.into_firestore_request(self.project_path.clone()))
+            .await?
+            .into_inner();
+
+        let next_page_token = if response.next_page_token.is_empty() {
+            None
+        } else {
+            Some(response.next_page_token)
+        };
+
+        Ok(operations::ListDocumentsResponse {
+            next_page_token,
+            documents: response
+                .documents
+                .into_iter()
+                .map(DocumentResponse::try_from_firestore)
+                .collect(),
+        })
+    }
+}
+
+#[async_trait]
 impl WriteExecutor for Database {
     async fn add_document(
         &self,
@@ -37,7 +68,7 @@ impl WriteExecutor for Database {
     }
 }
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error, Debug, PartialEq)]
 pub enum FirestoreError {
     #[error("unknown error")]
     UnknownError,

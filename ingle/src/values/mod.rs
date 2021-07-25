@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::google::firestore::v1 as firestore;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct DocumentValues(HashMap<String, Value>);
 
 impl DocumentValues {
@@ -33,7 +33,7 @@ impl DocumentValues {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Value {
     Null,
     Boolean(bool),
@@ -48,13 +48,13 @@ pub enum Value {
     Map(HashMap<String, Value>),
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Timestamp {
     pub seconds: i64,
     pub nandos: i32,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct LatLng {
     pub latitude: f64,
     pub longitude: f64,
@@ -121,11 +121,11 @@ impl Value {
     }
 }
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error, Debug, PartialEq)]
 pub enum DecodingError {
     #[error("No value was present in the response")]
     NoValuePresent,
 }
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error, Debug, PartialEq)]
 pub enum EncodingError {}

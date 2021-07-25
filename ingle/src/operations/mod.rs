@@ -1,6 +1,10 @@
 mod add_document;
+mod list_documents;
 
-pub use add_document::{AddDocumentOperation, AddDocumentRequest};
+pub use self::{
+    add_document::{AddDocumentOperation, AddDocumentRequest},
+    list_documents::{ListDocumentsOperation, ListDocumentsRequest, ListDocumentsResponse},
+};
 
 use crate::{
     values::{DecodingError, EncodingError},
@@ -13,7 +17,7 @@ pub(crate) trait IntoRequest {
     fn into_request(self) -> Result<Self::Request, OperationError>;
 }
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error, Debug, PartialEq)]
 pub enum OperationError {
     #[error("Error from firestore: {0}")]
     FirestoreError(#[from] FirestoreError),

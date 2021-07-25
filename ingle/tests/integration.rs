@@ -20,5 +20,4 @@ async fn test_adding_document() {
         .run(&database)
         .await
         .unwrap();
-    //let collection = ingle::CollectionRef::new("raw")
 }

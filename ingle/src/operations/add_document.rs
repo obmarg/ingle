@@ -27,7 +27,7 @@ pub struct AddDocumentOperation<T> {
 
     document: Result<DocumentValues, EncodingError>,
 
-    t: PhantomData<T>,
+    t: PhantomData<fn() -> T>,
 }
 
 impl<T> AddDocumentOperation<T>
@@ -82,7 +82,7 @@ pub struct AddDocumentRequest {
 }
 
 impl AddDocumentRequest {
-    pub fn into_firestore_request(
+    pub(crate) fn into_firestore_request(
         self,
         project_path: ProjectPath,
     ) -> firestore::CreateDocumentRequest {
