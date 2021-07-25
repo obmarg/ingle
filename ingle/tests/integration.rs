@@ -4,7 +4,7 @@ use ingle::{
 };
 
 #[tokio::test]
-async fn test_adding_document() {
+async fn test_adding_and_listing_documents() {
     let database = DatabaseBuilder::new("nandos-api-platform")
         .auth_token(std::env::var("GOOGLE_TOKEN").unwrap())
         .connect()
@@ -15,9 +15,19 @@ async fn test_adding_document() {
         "Test".to_string() => Value::Boolean(true)
     });
 
-    CollectionRef::new("books")
+    let collection = CollectionRef::new("books");
+
+    collection
         .add_document(&document)
         .run(&database)
         .await
         .unwrap();
+
+    let documents = collection
+        .list_documents::<DocumentValues>()
+        .fetch_all(&database)
+        .await
+        .unwrap();
+
+    assert!(!documents.is_empty());
 }
