@@ -265,6 +265,7 @@ impl<T> IntoRequest for ListDocumentsOperation<T> {
             collection_path: self.collection_path,
             page_size: self.page_size.unwrap_or_default(),
             page_token: self.page_token.unwrap_or_default(),
+            transaction_id: None,
         })
     }
 }
@@ -273,6 +274,7 @@ pub struct ListDocumentsRequest {
     collection_path: CollectionPath,
     page_size: i32,
     page_token: String,
+    transaction_id: Option<Vec<u8>>,
 }
 
 impl ListDocumentsRequest {
@@ -290,7 +292,16 @@ impl ListDocumentsRequest {
             order_by: String::new(),
             show_missing: false,
             mask: None,
-            consistency_selector: None,
+            consistency_selector: self
+                .transaction_id
+                .map(firestore::list_documents_request::ConsistencySelector::Transaction),
+        }
+    }
+
+    pub(crate) fn in_transaction(self, transaction_id: Vec<u8>) -> Self {
+        Self {
+            transaction_id: Some(transaction_id),
+            ..self
         }
     }
 }
@@ -381,9 +392,20 @@ mod tests {
         assert_eq!(docs, vec![]);
     }
 
-    // TODO: Test the stream_all (or stream) function when I write it.
-    // TOOD: Also the eventual fetch_all function
-    // Also error handling
+    #[tokio::test]
+    async fn fetch_all() {
+        let executor = executor_with_three_pages();
+
+        let docs = CollectionRef::new("hello")
+            .list_documents::<DocumentValues>()
+            .fetch_all(&executor)
+            .await
+            .unwrap();
+
+        assert_eq!(docs[0].name, "doc 1");
+        assert_eq!(docs[1].name, "doc 2");
+        assert_eq!(docs[2].name, "doc 3");
+    }
 
     fn executor_with_three_pages() -> TestExecutor {
         TestExecutor::default().list_documents_results(vec![

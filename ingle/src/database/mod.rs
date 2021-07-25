@@ -12,11 +12,13 @@ use crate::{
 
 mod auth;
 mod builder;
+pub mod transactions;
 
 pub use builder::{ConnectError, DatabaseBuilder};
 
 use self::auth::AuthService;
 
+#[derive(Clone)]
 pub struct Database {
     client: FirestoreClient<AuthService<Channel>>,
     project_path: ProjectPath,

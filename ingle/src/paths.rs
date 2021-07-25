@@ -31,9 +31,12 @@ impl CollectionPath {
     }
 
     pub fn parent_and_collection_id(self, project_path: ProjectPath) -> (String, String) {
+        let documents_part = "/documents";
         let parent_len = self.parent.as_ref().map(String::len).unwrap_or_default();
-        let mut parent = String::with_capacity(parent_len + project_path.path.len());
+        let mut parent =
+            String::with_capacity(parent_len + project_path.path.len() + documents_part.len());
         parent.push_str(&project_path.path);
+        parent.push_str(documents_part);
         if let Some(current_parent) = self.parent {
             parent.push_str(&current_parent);
         }
@@ -64,11 +67,12 @@ pub struct ProjectPath {
 impl ProjectPath {
     pub fn new(project_id: String, database_id: String) -> ProjectPath {
         ProjectPath {
-            path: format!(
-                "projects/{}/databases/{}/documents",
-                project_id, database_id
-            ),
+            path: format!("projects/{}/databases/{}", project_id, database_id),
         }
+    }
+
+    pub(crate) fn database_path(&self) -> &str {
+        &self.path
     }
 }
 

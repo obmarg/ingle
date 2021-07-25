@@ -13,3 +13,7 @@ pub use self::{
     document::Document,
     refs::{CollectionRef, DocumentRef},
 };
+
+pub mod transactions {
+    pub use super::database::transactions::*;
+}
