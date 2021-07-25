@@ -1,4 +1,4 @@
-use std::{io::Read, marker::PhantomData, task::Poll};
+use std::{marker::PhantomData, task::Poll};
 
 use futures_core::Stream;
 use futures_util::{future::BoxFuture, stream::StreamExt};
@@ -8,11 +8,10 @@ use super::{IntoRequest, OperationError};
 use crate::{
     document::{Document, DocumentResponse},
     executors::ReadExecutor,
-    google::firestore::v1::{self as firestore, write::Operation},
+    google::firestore::v1 as firestore,
     paths::CollectionPath,
     paths::ProjectPath,
-    values::{DecodingError, DocumentValues, EncodingError},
-    FirestoreError,
+    values::DecodingError,
 };
 
 impl crate::CollectionRef {
@@ -37,9 +36,9 @@ impl<T> Clone for ListDocumentsOperation<T> {
     fn clone(&self) -> Self {
         ListDocumentsOperation {
             collection_path: self.collection_path.clone(),
-            page_size: self.page_size.clone(),
+            page_size: self.page_size,
             page_token: self.page_token.clone(),
-            max_results: self.max_results.clone(),
+            max_results: self.max_results,
             phantom: PhantomData,
         }
     }
@@ -59,14 +58,14 @@ where
         }
     }
 
-    fn page_size(self, page_size: i32) -> Self {
+    pub fn page_size(self, page_size: i32) -> Self {
         Self {
             page_size: Some(page_size),
             ..self
         }
     }
 
-    fn page_token(self, page_token: String) -> Self {
+    pub fn page_token(self, page_token: String) -> Self {
         Self {
             page_token: Some(page_token),
             ..self
@@ -230,18 +229,6 @@ where
     buffer: Vec<DocumentResponse<T>>,
 }
 
-impl<'a, T, E> ListDocumentsStream<'a, T, E>
-where
-    E: ReadExecutor,
-{
-    fn new(page_stream: ListDocumentsPageStream<'a, T, E>) -> Self {
-        ListDocumentsStream {
-            inner: page_stream,
-            buffer: Vec::new(),
-        }
-    }
-}
-
 impl<'a, T, E> futures_core::stream::Stream for ListDocumentsStream<'a, T, E>
 where
     T: Document + 'a,
@@ -310,11 +297,15 @@ impl ListDocumentsRequest {
 
 #[cfg(test)]
 mod tests {
-    use futures::stream::StreamExt;
+    use futures_util::stream::StreamExt;
 
     use super::*;
 
-    use crate::{executors::tests::TestExecutor, values::Value, CollectionRef};
+    use crate::{
+        executors::tests::TestExecutor,
+        values::{DocumentValues, Value},
+        CollectionRef,
+    };
 
     #[tokio::test]
     async fn test_fetch_page() {
@@ -335,7 +326,67 @@ mod tests {
 
     #[tokio::test]
     async fn test_stream_pages() {
-        let executor = TestExecutor::default().list_documents_results(vec![
+        let executor = executor_with_three_pages();
+
+        let docs = CollectionRef::new("hello")
+            .list_documents::<DocumentValues>()
+            .stream_pages(&executor)
+            .collect::<Vec<_>>()
+            .await
+            .into_iter()
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap()
+            .into_iter()
+            .flatten()
+            .collect::<Vec<_>>();
+
+        assert_eq!(docs[0].name, "doc 1");
+        assert_eq!(docs[1].name, "doc 2");
+        assert_eq!(docs[2].name, "doc 3");
+    }
+
+    #[tokio::test]
+    async fn test_stream() {
+        let executor = executor_with_three_pages();
+
+        let docs = CollectionRef::new("hello")
+            .list_documents::<DocumentValues>()
+            .stream(&executor)
+            .collect::<Vec<_>>()
+            .await
+            .into_iter()
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap();
+
+        assert_eq!(docs[0].name, "doc 1");
+        assert_eq!(docs[1].name, "doc 2");
+        assert_eq!(docs[2].name, "doc 3");
+    }
+
+    #[tokio::test]
+    async fn stream_takes_boxed_executor() {
+        let executor: Box<dyn ReadExecutor> = Box::new(
+            TestExecutor::default().list_documents_result(Ok(ListDocumentsResponse {
+                next_page_token: None,
+                documents: vec![],
+            })),
+        );
+
+        let docs = CollectionRef::new("hello")
+            .list_documents::<DocumentValues>()
+            .stream(&executor.as_ref())
+            .collect::<Vec<_>>()
+            .await;
+
+        assert_eq!(docs, vec![]);
+    }
+
+    // TODO: Test the stream_all (or stream) function when I write it.
+    // TOOD: Also the eventual fetch_all function
+    // Also error handling
+
+    fn executor_with_three_pages() -> TestExecutor {
+        TestExecutor::default().list_documents_results(vec![
             Ok(ListDocumentsResponse {
                 next_page_token: Some("next_page".into()),
                 documents: vec![Ok(DocumentResponse {
@@ -363,40 +414,6 @@ mod tests {
                     }),
                 })],
             }),
-        ]);
-
-        let docs = CollectionRef::new("hello")
-            .list_documents::<DocumentValues>()
-            .stream_pages(&executor)
-            .collect::<Vec<_>>()
-            .await
-            .into_iter()
-            .collect::<Result<Vec<_>, _>>()
-            .unwrap()
-            .into_iter()
-            .flatten()
-            .collect::<Vec<_>>();
-
-        assert_eq!(docs[0].name, "doc 1");
-        assert_eq!(docs[1].name, "doc 2");
-        assert_eq!(docs[2].name, "doc 3");
-    }
-
-    #[tokio::test]
-    async fn stream_pages_takes_boxed_executor() {
-        let executor: Box<dyn ReadExecutor> = Box::new(
-            TestExecutor::default().list_documents_result(Ok(ListDocumentsResponse {
-                next_page_token: None,
-                documents: vec![],
-            })),
-        );
-
-        let docs = CollectionRef::new("hello")
-            .list_documents::<DocumentValues>()
-            .stream_pages(&executor.as_ref())
-            .collect::<Vec<_>>()
-            .await;
-
-        assert_eq!(docs, vec![]);
+        ])
     }
 }

@@ -1,9 +1,6 @@
 use async_trait::async_trait;
 
-use crate::{
-    document::DocumentResponse, google::firestore::v1::list_documents_request, operations,
-    values::DocumentValues, FirestoreError,
-};
+use crate::{document::DocumentResponse, operations, values::DocumentValues, FirestoreError};
 
 #[async_trait]
 pub trait ReadExecutor: Send + Sync {
@@ -60,8 +57,6 @@ where
 #[cfg(test)]
 pub(crate) mod tests {
     use std::sync::{Arc, Mutex};
-
-    use crate::google::firestore::v1::Write;
 
     use super::*;
 
@@ -153,7 +148,7 @@ pub(crate) mod tests {
     impl WriteExecutor for TestExecutor {
         async fn add_document(
             &self,
-            input: operations::AddDocumentRequest,
+            _: operations::AddDocumentRequest,
         ) -> Result<DocumentResponse<DocumentValues>, FirestoreError> {
             Err(FirestoreError::UnknownError)
         }
