@@ -1,6 +1,8 @@
-use std::{marker::PhantomData, task::Poll};
+use std::{io::Read, marker::PhantomData, task::Poll};
 
-use futures_util::future::BoxFuture;
+use futures_core::Stream;
+use futures_util::{future::BoxFuture, stream::StreamExt};
+use pin_project::pin_project;
 
 use super::{IntoRequest, OperationError};
 use crate::{
@@ -104,6 +106,17 @@ where
         })
     }
 
+    pub async fn fetch_all<E>(self, executor: E) -> Result<Vec<DocumentResponse<T>>, OperationError>
+    where
+        E: ReadExecutor,
+    {
+        self.stream(&executor)
+            .collect::<Vec<_>>()
+            .await
+            .into_iter()
+            .collect::<Result<Vec<_>, _>>()
+    }
+
     pub fn stream_pages<E>(self, executor: &'_ E) -> ListDocumentsPageStream<'_, T, E>
     where
         E: ReadExecutor,
@@ -116,6 +129,16 @@ where
             phantom: PhantomData,
         }
     }
+
+    pub fn stream<E>(self, executor: &'_ E) -> ListDocumentsStream<'_, T, E>
+    where
+        E: ReadExecutor,
+    {
+        ListDocumentsStream {
+            inner: self.stream_pages(executor),
+            buffer: Vec::new(),
+        }
+    }
 }
 
 enum PagingState {
@@ -126,11 +149,12 @@ enum PagingState {
 }
 
 pub struct ListDocumentsResponse<T> {
+    // TODO: Custom type for next_page_token maybe?
     pub next_page_token: Option<String>,
     pub documents: Vec<Result<DocumentResponse<T>, DecodingError>>,
 }
 
-#[pin_project::pin_project]
+#[pin_project]
 pub struct ListDocumentsPageStream<'a, T, E>
 where
     E: ReadExecutor,
@@ -142,7 +166,7 @@ where
     phantom: PhantomData<&'a E>,
 }
 
-impl<'a, T, E> futures_core::stream::Stream for ListDocumentsPageStream<'a, T, E>
+impl<'a, T, E> Stream for ListDocumentsPageStream<'a, T, E>
 where
     T: Document + 'a,
     E: ReadExecutor,
@@ -192,6 +216,56 @@ where
 
                 Poll::Ready(Some(result))
             }
+        }
+    }
+}
+
+#[pin_project]
+pub struct ListDocumentsStream<'a, T, E>
+where
+    E: ReadExecutor,
+{
+    #[pin]
+    inner: ListDocumentsPageStream<'a, T, E>,
+    buffer: Vec<DocumentResponse<T>>,
+}
+
+impl<'a, T, E> ListDocumentsStream<'a, T, E>
+where
+    E: ReadExecutor,
+{
+    fn new(page_stream: ListDocumentsPageStream<'a, T, E>) -> Self {
+        ListDocumentsStream {
+            inner: page_stream,
+            buffer: Vec::new(),
+        }
+    }
+}
+
+impl<'a, T, E> futures_core::stream::Stream for ListDocumentsStream<'a, T, E>
+where
+    T: Document + 'a,
+    E: ReadExecutor,
+{
+    type Item = Result<DocumentResponse<T>, OperationError>;
+
+    fn poll_next(
+        self: std::pin::Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<std::option::Option<<Self as futures_core::Stream>::Item>> {
+        let this = self.project();
+        if let Some(next) = this.buffer.pop() {
+            return Poll::Ready(Some(Ok(next)));
+        }
+
+        match this.inner.poll_next(cx) {
+            Poll::Pending => Poll::Pending,
+            Poll::Ready(None) => Poll::Ready(None),
+            Poll::Ready(Some(Ok(page))) => {
+                *this.buffer = page;
+                Poll::Ready(this.buffer.pop().map(Ok))
+            }
+            Poll::Ready(Some(Err(e))) => Poll::Ready(Some(Err(e))),
         }
     }
 }

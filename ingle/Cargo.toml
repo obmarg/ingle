@@ -23,7 +23,6 @@ version = "0.5.0"
 features = ["transport", "tls", "tls-roots"]
 
 [dev-dependencies]
-futures = "0.3"
 insta = "1.7.1"
 maplit = "1.0.2"
 tokio = { version = "1.9.0" }
