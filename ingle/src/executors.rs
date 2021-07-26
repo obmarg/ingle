@@ -54,6 +54,20 @@ where
     }
 }
 
+#[async_trait]
+pub trait BatchWriteExecutor: Send + Sync {
+    async fn add_document(&self, input: operations::AddDocumentRequest);
+}
+
+#[async_trait]
+impl<T> BatchWriteExecutor for &T
+where
+    T: BatchWriteExecutor,
+{
+    async fn add_document(&self, input: operations::AddDocumentRequest) {
+        (*self).add_document(input).await
+    }
+}
 #[cfg(test)]
 pub(crate) mod tests {
     use std::sync::{Arc, Mutex};

@@ -1,5 +1,5 @@
 use ingle::{
-    transactions::ReadOnlyExecutor,
+    transactions::{ReadOnlyExecutor, ReadPhaseExecutor},
     values::{DocumentValues, Value},
     CollectionRef, DatabaseBuilder,
 };
@@ -57,4 +57,47 @@ async fn test_read_only_transactions() {
         })
         .await
         .unwrap();
+}
+
+#[tokio::test]
+async fn test_read_write_transactions() {
+    let database = DatabaseBuilder::new(std::env::var("GOOGLE_PROJECT").unwrap())
+        .auth_token(std::env::var("GOOGLE_TOKEN").unwrap())
+        .connect()
+        .await
+        .unwrap();
+
+    println!("Connected");
+
+    database
+        .transaction()
+        .read_write()
+        .run(|tx: ReadPhaseExecutor| async move {
+            println!("In transaction");
+            let collection = CollectionRef::new("books");
+
+            let documents = collection
+                .list_documents::<DocumentValues>()
+                .fetch_all(&tx)
+                .await
+                .unwrap();
+
+            println!("Got documents: {:?}", documents);
+
+            //assert!(!documents.is_empty());
+
+            let writes = tx.finish_reads();
+
+            let document = DocumentValues::from_hashmap(maplit::hashmap! {
+                "Test".to_string() => Value::Boolean(true)
+            });
+
+            println!("Adding Document");
+            collection.add_document(&document).something(&writes).await;
+            println!("Added Document");
+        })
+        .await
+        .unwrap();
+
+    println!("Done transaction");
 }

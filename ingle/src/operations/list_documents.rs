@@ -24,6 +24,7 @@ impl crate::CollectionRef {
 }
 
 #[derive(Debug)]
+#[must_use]
 pub struct ListDocumentsOperation<T> {
     collection_path: CollectionPath,
     page_size: Option<i32>,

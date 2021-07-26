@@ -57,6 +57,18 @@ impl DocumentPath {
             id,
         }
     }
+
+    pub(crate) fn full_path(self, project_path: ProjectPath) -> String {
+        let documents_part = "/documents";
+
+        let mut document_id =
+            String::with_capacity(project_path.path.len() + documents_part.len() + self.path.len());
+        document_id.push_str(&project_path.path);
+        document_id.push_str(documents_part);
+        document_id.push_str(&self.path);
+
+        document_id
+    }
 }
 
 #[derive(Clone)]

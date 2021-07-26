@@ -4,7 +4,7 @@ use tonic::transport::Channel;
 use crate::{
     document::DocumentResponse,
     executors::{ReadExecutor, WriteExecutor},
-    google::firestore::v1::firestore_client::FirestoreClient,
+    google::firestore::v1 as firestore,
     operations,
     paths::ProjectPath,
     values::{DecodingError, DocumentValues},
@@ -18,9 +18,11 @@ pub use builder::{ConnectError, DatabaseBuilder};
 
 use self::auth::AuthService;
 
+type FirestoreClient = firestore::firestore_client::FirestoreClient<AuthService<Channel>>;
+
 #[derive(Clone)]
 pub struct Database {
-    client: FirestoreClient<AuthService<Channel>>,
+    client: FirestoreClient,
     project_path: ProjectPath,
 }
 

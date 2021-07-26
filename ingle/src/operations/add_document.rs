@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use super::{IntoRequest, OperationError};
 use crate::{
     document::{Document, DocumentResponse},
-    executors::WriteExecutor,
+    executors::{BatchWriteExecutor, WriteExecutor},
     google::firestore::v1 as firestore,
     paths::CollectionPath,
     paths::ProjectPath,
@@ -20,6 +20,7 @@ impl crate::CollectionRef {
 }
 
 #[derive(Debug)]
+#[must_use]
 pub struct AddDocumentOperation<T> {
     collection_path: CollectionPath,
 
@@ -101,4 +102,32 @@ impl AddDocumentRequest {
             mask: None,
         }
     }
+
+    pub(crate) fn into_firestore_write(self, project_path: ProjectPath) -> firestore::Write {
+        firestore::Write {
+            update_mask: None,
+            update_transforms: vec![],
+            current_document: None,
+            operation: Some(firestore::write::Operation::Update(firestore::Document {
+                name: self
+                    .collection_path
+                    .document(new_doc_id())
+                    .full_path(project_path),
+                fields: self.document.into_firestore(),
+                create_time: None,
+                update_time: None,
+            })),
+        }
+    }
+}
+
+fn new_doc_id() -> String {
+    use rand::distributions::Alphanumeric;
+    use rand::{thread_rng, Rng};
+
+    thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(20)
+        .map(char::from)
+        .collect()
 }
