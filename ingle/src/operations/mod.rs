@@ -1,9 +1,11 @@
 mod add_document;
 mod list_documents;
+mod set_document;
 
 pub use self::{
     add_document::{AddDocumentOperation, AddDocumentRequest},
     list_documents::{ListDocumentsOperation, ListDocumentsRequest, ListDocumentsResponse},
+    set_document::{SetDocumentOperation, SetDocumentRequest},
 };
 
 use crate::{

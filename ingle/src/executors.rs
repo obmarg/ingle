@@ -39,6 +39,11 @@ pub trait WriteExecutor: Send + Sync {
         &self,
         input: operations::AddDocumentRequest,
     ) -> Result<DocumentResponse<DocumentValues>, FirestoreError>;
+
+    async fn set_document(
+        &self,
+        input: operations::SetDocumentRequest,
+    ) -> Result<DocumentResponse<DocumentValues>, FirestoreError>;
 }
 
 #[async_trait]
@@ -51,6 +56,13 @@ where
         input: operations::AddDocumentRequest,
     ) -> Result<DocumentResponse<DocumentValues>, FirestoreError> {
         (*self).add_document(input).await
+    }
+
+    async fn set_document(
+        &self,
+        input: operations::SetDocumentRequest,
+    ) -> Result<DocumentResponse<DocumentValues>, FirestoreError> {
+        (*self).set_document(input).await
     }
 }
 
@@ -68,6 +80,7 @@ where
         (*self).add_document(input).await
     }
 }
+
 #[cfg(test)]
 pub(crate) mod tests {
     use std::sync::{Arc, Mutex};
@@ -163,6 +176,13 @@ pub(crate) mod tests {
         async fn add_document(
             &self,
             _: operations::AddDocumentRequest,
+        ) -> Result<DocumentResponse<DocumentValues>, FirestoreError> {
+            Err(FirestoreError::UnknownError)
+        }
+
+        async fn set_document(
+            &self,
+            _: operations::SetDocumentRequest,
         ) -> Result<DocumentResponse<DocumentValues>, FirestoreError> {
             Err(FirestoreError::UnknownError)
         }

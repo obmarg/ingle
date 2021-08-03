@@ -70,6 +70,19 @@ impl WriteExecutor for Database {
             .into_inner()
             .try_into_document_response()?)
     }
+
+    async fn set_document(
+        &self,
+        input: operations::SetDocumentRequest,
+    ) -> Result<DocumentResponse<DocumentValues>, FirestoreError> {
+        let mut client = self.client.clone();
+
+        Ok(client
+            .update_document(input.into_firestore_request(self.project_path.clone()))
+            .await?
+            .into_inner()
+            .try_into_document_response()?)
+    }
 }
 
 #[derive(thiserror::Error, Debug, PartialEq)]

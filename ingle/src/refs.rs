@@ -19,7 +19,7 @@ impl CollectionRef {
 }
 
 pub struct DocumentRef {
-    path: DocumentPath,
+    pub(crate) path: DocumentPath,
 }
 
 impl DocumentRef {
