@@ -62,6 +62,15 @@ where
             document: T::from_values(response.document)?,
         })
     }
+
+    pub async fn run_in<E>(self, executor: E)
+    where
+        E: BatchWriteExecutor,
+    {
+        executor
+            .add_document(self.into_request().expect("TODO: errors"))
+            .await
+    }
 }
 
 impl<T> IntoRequest for AddDocumentOperation<T> {

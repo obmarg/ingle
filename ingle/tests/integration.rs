@@ -86,14 +86,14 @@ async fn test_read_write_transactions() {
 
             //assert!(!documents.is_empty());
 
-            let writes = tx.finish_reads();
+            let tx = tx.finish_reads();
 
             let document = DocumentValues::from_hashmap(maplit::hashmap! {
                 "Test".to_string() => Value::Boolean(true)
             });
 
             println!("Adding Document");
-            collection.add_document(&document).something(&writes).await;
+            collection.add_document(&document).run_in(&tx).await;
             println!("Added Document");
         })
         .await
