@@ -18,6 +18,10 @@ impl DocumentValues {
         DocumentValues(values)
     }
 
+    pub fn into_value(self) -> Value {
+        Value::Map(self.0)
+    }
+
     pub(crate) fn into_firestore(self) -> HashMap<String, firestore::Value> {
         self.0
             .into_iter()

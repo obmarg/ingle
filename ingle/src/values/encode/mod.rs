@@ -2,16 +2,15 @@ use std::collections::HashMap;
 
 use super::{DocumentValues, EncodingError, Value};
 
-mod document_encoder;
+pub mod document;
 mod value_encoder;
 
-pub use document_encoder::DocumentEncoder;
-use value_encoder::ValueEncoder;
+pub use self::value_encoder::ValueEncoder;
 
 type Result<T> = std::result::Result<T, EncodingError>;
 
 pub trait EncodableDocument {
-    fn encode(&self, encoder: DocumentEncoder) -> Result<DocumentValues>;
+    fn encode(&self) -> Result<DocumentValues>;
 }
 
 pub trait EncodableValue {
@@ -21,5 +20,11 @@ pub trait EncodableValue {
 impl EncodableValue for bool {
     fn encode(&self, encoder: ValueEncoder) -> Result<Value> {
         encoder.encode_bool(*self)
+    }
+}
+
+impl<T: EncodableValue> EncodableValue for &T {
+    fn encode(&self, encoder: ValueEncoder) -> Result<Value> {
+        (*self).encode(encoder)
     }
 }

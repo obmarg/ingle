@@ -70,12 +70,24 @@ fn codegen(document: EncodableDocument) -> TokenStream {
 
     quote! {
         impl #impl_generics ::ingle::EncodableDocument for #ident #ty_generics #where_clause {
-            fn encode(&self, encoder: ::ingle::values::encode::DocumentEncoder) -> Result<::ingle::values::DocumentValues, ::ingle::values::EncodingError> {
-                let mut encoder = encoder.encode_struct(#name, #num_fields)?;
+            fn encode(&self) -> Result<
+                ::ingle::values::DocumentValues,
+                ::ingle::values::EncodingError
+            > {
+                let mut encoder = ::ingle::values::encode::document::encode_struct(#name, #num_fields)?;
                 #(
                     encoder.encode_entry(#field_strings.to_string(), &self.#fields)?;
                 )*
                 encoder.end()
+            }
+        }
+
+        impl #impl_generics ::ingle::EncodableValue for #ident #ty_generics #where_clause {
+            fn encode(&self, encoder: ::ingle::values::encode::ValueEncoder) -> Result<
+                ::ingle::values::Value,
+                ::ingle::values::EncodingError
+            > {
+                <Self as ::ingle::EncodableDocument>::encode(self).map(|doc| doc.into_value())
             }
         }
     }
