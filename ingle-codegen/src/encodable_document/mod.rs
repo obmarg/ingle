@@ -83,7 +83,7 @@ fn codegen(document: EncodableDocument) -> TokenStream {
         }
 
         impl #impl_generics ::ingle::EncodableValue for #ident #ty_generics #where_clause {
-            fn encode(&self, encoder: ::ingle::values::encode::ValueEncoder) -> Result<
+            fn encode(&self) -> Result<
                 ::ingle::values::Value,
                 ::ingle::values::EncodingError
             > {

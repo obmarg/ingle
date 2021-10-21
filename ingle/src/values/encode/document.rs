@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use super::{DocumentValues, EncodableDocument, EncodableValue, Result, Value, ValueEncoder};
+use super::{DocumentValues, EncodableDocument, EncodableValue, Result, Value};
 
 pub fn encode_newtype_struct<T>(_name: &'static str, value: &T) -> Result<DocumentValues>
 where
@@ -50,7 +50,7 @@ impl DocumentMapEncoder {
     where
         V: ?Sized + EncodableValue,
     {
-        self.map.insert(key, value.encode(ValueEncoder {})?);
+        self.map.insert(key, value.encode()?);
         Ok(())
     }
 
