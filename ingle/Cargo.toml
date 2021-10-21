@@ -20,6 +20,8 @@ serde_json = "1.0.64"
 thiserror = "1.0.26"
 tower-service = "0.3"
 
+ingle-proc-macros = { path = "../ingle-proc-macros" }
+
 [dependencies.tonic]
 version = "0.5.0"
 features = ["transport", "tls", "tls-roots"]

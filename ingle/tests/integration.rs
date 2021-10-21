@@ -18,7 +18,7 @@ async fn test_adding_and_listing_documents() {
 
     let collection = CollectionRef::new("books");
 
-    collection
+    let added_doc = collection
         .add_document(&document)
         .run(&database)
         .await

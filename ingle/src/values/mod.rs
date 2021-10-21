@@ -2,6 +2,10 @@ use std::collections::HashMap;
 
 use crate::google::firestore::v1 as firestore;
 
+pub mod encode;
+
+pub use encode::{EncodableDocument, EncodableValue};
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct DocumentValues(HashMap<String, Value>);
 
@@ -128,4 +132,7 @@ pub enum DecodingError {
 }
 
 #[derive(thiserror::Error, Debug, PartialEq)]
-pub enum EncodingError {}
+pub enum EncodingError {
+    #[error("A field contained an integer that would overflow the rust type")]
+    IntegerOverflow,
+}

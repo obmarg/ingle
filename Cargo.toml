@@ -1,5 +1,7 @@
 [workspace]
 members = [
     "ingle",
+    "ingle-proc-macros",
+    "ingle-codegen",
     "xtask"
 ]
