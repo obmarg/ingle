@@ -119,6 +119,7 @@ impl TransactionBuilder<ReadWrite> {
                 }),
             };
 
+            // TODO: Move this into a function
             let response = begin_transaction(&mut client, begin_request).await?;
 
             transaction_id = response.transaction.clone();
@@ -149,6 +150,7 @@ impl TransactionBuilder<ReadWrite> {
 
                 last_error = Some(TransactionError::RollbackRequested);
                 continue;
+                // TODO: Maybe some logging here?
             }
 
             let commit = commit_request(&self.database.project_path, &transaction_id, writes);
@@ -167,6 +169,14 @@ impl TransactionBuilder<ReadWrite> {
 }
 
 impl TransactionBuilder<ReadOnly> {
+    // TODO: Also wonder if this should expose a `fn begin(self) -> SomeSortOfGuard`
+    // That can be used to do this stuff without the closure.
+    //
+    // Don't need retries so maybe don't need the run function?
+    //
+    // Definitely want to do this, but think it'll involve spawning some tokio stuff so
+    // maybe not right now.
+
     pub async fn run<T>(self, transaction: T) -> Result<T::Result, TransactionError>
     where
         T: ReadOnlyTransaction,
@@ -203,6 +213,8 @@ impl TransactionBuilder<ReadOnly> {
             },
         )
         .await?;
+
+        // TODO: DO I need to inspect/do anything with the commit result?
 
         Ok(result)
     }

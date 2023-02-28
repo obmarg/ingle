@@ -26,6 +26,13 @@ pub struct Database {
     project_path: ProjectPath,
 }
 
+// Ok, so the transaction API.
+// Need a Transaction executor.
+// Probably split in two for the read phase and the write phase.
+//
+// Also need to implement the retry mechanisms. Probably via a Transaction trait
+// or similar (with a default impl for closures)
+
 #[async_trait]
 impl ReadExecutor for Database {
     async fn list_documents(
@@ -130,6 +137,7 @@ impl From<tonic::Status> for FirestoreError {
             tonic::Code::Cancelled => FirestoreError::Cancelled,
             tonic::Code::Unknown => FirestoreError::UnknownError,
             tonic::Code::InvalidArgument => {
+                // TODO: Would be good to parse out the details on this one.
                 // See https://github.com/googleapis/googleapis/blob/master/google/rpc/error_details.proto for details
                 FirestoreError::InvalidArgument(status.message().to_string())
             }
@@ -137,6 +145,7 @@ impl From<tonic::Status> for FirestoreError {
             tonic::Code::NotFound => FirestoreError::NotFound,
             tonic::Code::AlreadyExists => FirestoreError::AlreadyExists,
             tonic::Code::PermissionDenied => {
+                // TODO: might be good to get the details on this one too.
                 FirestoreError::PermissionDenied(status.message().to_string())
             }
             tonic::Code::ResourceExhausted => {
@@ -152,8 +161,11 @@ impl From<tonic::Status> for FirestoreError {
             tonic::Code::Unavailable => FirestoreError::Unavailable,
             tonic::Code::DataLoss => FirestoreError::DataLoss,
             tonic::Code::Unauthenticated => {
+                // TODO: Details would be good on this
                 FirestoreError::Unauthenticated(status.message().to_string())
             }
         }
     }
 }
+
+// TODO: Ok, so sometimes there's a google.rpc.ErrorInfo embedded in details

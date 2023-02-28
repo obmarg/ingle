@@ -23,6 +23,7 @@ pub struct DatabaseBuilder {
 
 impl DatabaseBuilder {
     pub fn new(project_id: impl Into<String>) -> DatabaseBuilder {
+        // TODO: Use env vars to guess emulator?
         DatabaseBuilder {
             endpoint: Endpoint::from_static(FIRESTORE_ENDPOINT)
                 .tls_config(ClientTlsConfig::default())

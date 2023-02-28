@@ -29,7 +29,9 @@ pub struct ListDocumentsOperation<T> {
     collection_path: CollectionPath,
     page_size: Option<i32>,
     page_token: Option<String>,
+    // TODO: Rethink max_results
     max_results: Option<i32>,
+    // TODO: order_by, where, show_missing, mask
     phantom: PhantomData<fn() -> T>,
 }
 
@@ -275,6 +277,8 @@ pub struct ListDocumentsRequest {
     collection_path: CollectionPath,
     page_size: i32,
     page_token: String,
+    // TODO: order_by, mask, show missing
+    // consistency selector
     transaction_id: Option<Vec<u8>>,
 }
 

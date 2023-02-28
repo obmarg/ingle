@@ -2,9 +2,14 @@ use std::collections::HashMap;
 
 use crate::google::firestore::v1 as firestore;
 
+pub mod decode;
 pub mod encode;
 
+// TODO: To re-export the DocumentError or not?
 pub use encode::{EncodableDocument, EncodableValue};
+
+// TODO: Come back to the ser/de stuff
+// mod ser;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct DocumentValues(HashMap<String, Value>);
@@ -59,6 +64,7 @@ pub enum Value {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Timestamp {
     pub seconds: i64,
+    // TODO: Docs say it's only precise to micros so should I make this simpler?
     pub nandos: i32,
 }
 

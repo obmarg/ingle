@@ -11,6 +11,8 @@ use crate::{
 };
 
 impl crate::DocumentRef {
+    // TODO: Should this be a Result actually?
+    // and just get any encoding problems out the way here?
     pub fn set<T>(&self, document: &T) -> SetDocumentOperation<T>
     where
         T: Document,
@@ -33,6 +35,8 @@ impl<T> SetDocumentOperation<T>
 where
     T: Document,
 {
+    // TODO: Decide on the approach for encoding values here.
+    // Return a result or not?
     fn new(document_path: DocumentPath, document: &T) -> Self {
         Self {
             document_path,
@@ -52,6 +56,18 @@ where
             document: T::from_values(response.document)?,
         })
     }
+
+    // TODO: Implement this.
+    /*
+       pub async fn run_in<E>(self, executor: E)
+       where
+           E: BatchWriteExecutor,
+       {
+           executor
+               .add_document(self.into_request().expect("TODO: errors"))
+               .await
+       }
+    */
 }
 
 impl<T> IntoRequest for SetDocumentOperation<T> {
@@ -103,3 +119,4 @@ impl SetDocumentRequest {
     }
 }
 
+// TODO: tests

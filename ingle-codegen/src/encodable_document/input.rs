@@ -60,3 +60,5 @@ mod tests {
         "###);
     }
 }
+
+// TODO: ui tests of deriving this on invalid types...

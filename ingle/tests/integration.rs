@@ -45,6 +45,8 @@ async fn test_read_only_transactions() {
         .transaction()
         .read_only()
         .run(|tx: ReadOnlyExecutor| async move {
+            // TODO: Ideally do a non transactional write here to make sure it doesn't
+            // show in the list
             let collection = CollectionRef::new("books");
 
             let documents = collection
@@ -95,6 +97,8 @@ async fn test_read_write_transactions() {
             println!("Adding Document");
             collection.add_document(&document).run_in(&tx).await;
             println!("Added Document");
+
+            // TODO: Ideally cause clashes here somehow (maybe w/ non-transactional writes)
         })
         .await
         .unwrap();

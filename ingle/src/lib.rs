@@ -21,3 +21,6 @@ pub mod transactions {
 
 // Re-export the proc macros
 pub use ingle_proc_macros::EncodableDocument;
+
+// TODO: Some aliases for the transaction types...
+// Possibly a module for transactions?

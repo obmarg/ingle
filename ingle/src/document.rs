@@ -3,6 +3,15 @@ use crate::{
     values::{DecodingError, DocumentValues, EncodingError},
 };
 
+// TODO: Should this be called `Fields`?
+// Works for differentiating between the document returned and
+// the fields contained within.
+//
+// Also gives a good name for the derive, since every struct
+// can just derive Fields and don't need to differentiate levels?
+//
+// Fields can also implement whatever serde style traits I come up
+// with.
 pub trait Document: Sized {
     fn to_values(&self) -> Result<DocumentValues, EncodingError>;
 
@@ -20,9 +29,14 @@ impl Document for DocumentValues {
 }
 
 pub struct DocumentResponse<D> {
+    // TODO: Should this be a path/DocumentRef/something else?
     pub name: String,
 
+    // TODO: Should this be named fields?
     pub document: D,
+    // TODO: This pair (don't forget to update PartialEq etc. below)
+    //create_time: Y,
+    //update_time: Z,
 }
 
 impl<D> PartialEq for DocumentResponse<D>
@@ -47,6 +61,8 @@ where
             .finish()
     }
 }
+
+// TODO: Hash etc. as well?
 
 impl DocumentResponse<DocumentValues> {
     pub(crate) fn try_from_firestore(

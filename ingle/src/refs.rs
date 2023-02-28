@@ -6,6 +6,8 @@ pub struct CollectionRef {
 
 impl CollectionRef {
     pub fn new(collection_id: impl Into<String>) -> CollectionRef {
+        // TODO: just take a collection path maybe?
+        // or an into CollectionPath?
         CollectionRef {
             path: CollectionPath::new(collection_id.into()),
         }
@@ -16,6 +18,9 @@ impl CollectionRef {
             path: self.path.document(id.into()),
         }
     }
+
+    // TODO: Emulate the doc method of firestore that gets a
+    // DocumentRef to a new random ID
 }
 
 pub struct DocumentRef {
@@ -29,6 +34,14 @@ impl DocumentRef {
         }
     }
 }
+
+// Ok, so use the two above but also provide macro shortcuts?
+// Maybe?
+//
+// Possible macro shortcuts:
+//
+// document!("articles", x, "comments", y)
+// collection!("articles", x, "comments")
 
 #[cfg(test)]
 mod tests {

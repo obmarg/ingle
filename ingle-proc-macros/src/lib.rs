@@ -1,5 +1,8 @@
 #![allow(clippy::let_and_return)]
 
+// TODO: enable this
+//#![warn(missing_docs)]
+
 extern crate proc_macro;
 
 use proc_macro::TokenStream;

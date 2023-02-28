@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use super::{DocumentValues, EncodingError, Value};
 
 pub mod document;
@@ -11,10 +9,13 @@ pub trait EncodableDocument {
     fn encode(&self) -> Result<DocumentValues>;
 }
 
+// TODO: impl EncodableDocument for types which make sense (mostly HashMap etc)
+
 pub trait EncodableValue {
     fn encode(&self) -> Result<Value>;
 }
 
+// TODO: impl this for other primitives
 impl EncodableValue for bool {
     fn encode(&self) -> Result<Value> {
         value::encode_bool(*self)
@@ -26,3 +27,6 @@ impl<T: EncodableValue> EncodableValue for &T {
         (*self).encode()
     }
 }
+
+// TODO: Actually, do we even need half the encode_X functions
+// when we can just use the trait impls directly?

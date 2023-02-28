@@ -48,9 +48,20 @@ macro_rules! impl_read_executor {
 impl_read_executor!(ReadPhaseExecutor);
 impl_read_executor!(ReadOnlyExecutor);
 
+// TODO: is this a good name?
 pub struct WritePhaseExecutor {
     writes: UnboundedSender<WriteRequest>,
 }
+
+// Ok, so ideal semantics:
+// - Rollback can be called, will abort transaction and trigger a retry.
+// - Commit can be called to commit early (failure will trigger a retry when control returns).
+//
+// We commit on return if no rollback/commit was called (retry on fail)
+//
+// Transaction functions are assumed to be succesful unless one of the above retry paths
+// happens.
+//
 
 impl WritePhaseExecutor {
     pub async fn rollback(self) {
@@ -79,6 +90,8 @@ pub(super) enum WriteRequest {
 
 impl WriteRequest {
     pub fn into_firestore_write(self, project_path: &ProjectPath) -> Option<firestore::Write> {
+        // TODO: If random IDs are needed do something like this:
+        // https://github.com/googleapis/python-firestore/blob/8703b48c45e7bb742a794cad9597740c44182f81/google/cloud/firestore_v1/base_collection.py#L465
         match self {
             WriteRequest::Rollback => {
                 panic!("Trying to write a rollback request.  This shouldn't happen")

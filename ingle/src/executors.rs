@@ -33,6 +33,8 @@ impl ReadExecutor for &dyn ReadExecutor {
     }
 }
 
+// TODO: maybe also Box<ReadExecutor>?
+
 #[async_trait]
 pub trait WriteExecutor: Send + Sync {
     async fn add_document(
